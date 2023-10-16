@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
   });
 
   const { error, value } = schema.validate(req.body);
-  console.log(error.message);
+  console.log(error);
   if(error)
   {
     res.send({message:"no data recieved"})
@@ -73,14 +73,14 @@ router.post('/forgot', async(req, res) => {
       const num= OTP();
       console.log(num);
       const generatedCode = num ;
-      const expireTime = 10 * 60 * 1000;
+      const expireTime = 340 * 60 * 1000;
   
    
       verificationCodes.set(email, {
           code: generatedCode,
           expires: Date.now() + expireTime,
       });
-  
+      console.log(expireTime+Date.now());
     const mailOptions = {
       to: email,
       subject: 'Password Reset Verification Code',
@@ -190,8 +190,9 @@ const verifyCode = (req, res, next) => {
     const email = req.body.email;
     const code = req.body.code;
     const storedCode = verificationCodes.get(email);
-  
-    if (!storedCode  || Date.now() > storedCode.expires) {
+    const time=Date.now()+(330*60*1000)
+    console.log(storedCode);
+    if (  (time > storedCode?.expires)) {
       res.send('Code Expired!');
     } else if( storedCode.code !== code){
       res.send('Invalid Code!');
@@ -215,8 +216,8 @@ router.post('/change-password', verifyCode, async (req, res) => {
     return res.status(404).send({ message: "User not found" });
   }
 
-  const comp = bcrypt.compare(password, db_user.password);
-
+  const comp =await bcrypt.compare(password, db_user.password);
+  console.log(comp);
   if (comp) {
     return res.send({ message: "Don't use old password" });
   }
